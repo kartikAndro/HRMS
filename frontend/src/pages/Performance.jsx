@@ -12,12 +12,13 @@ import {
   User, 
   FileText,
   TrendingUp,
-  Target
+  Target,
+  Star
 } from 'lucide-react';
 
 const Performance = () => {
-  const { user: currentUser, isAdmin, isHR } = useAuth();
-  const isManager = isAdmin || isHR;
+  const { user: currentUser, isAdmin, isHR, isManager: isDeptManager } = useAuth();
+  const isManager = isAdmin || isHR || isDeptManager;
 
   // Global lists
   const [employees, setEmployees] = useState([]);
@@ -43,13 +44,17 @@ const Performance = () => {
 
   const [formLoading, setFormLoading] = useState(false);
   const [formSuccess, setFormSuccess] = useState('');
-  const [createdSummary, setCreatedSummary] = useState(null);
+  const [taskMetrics, setTaskMetrics] = useState(null);
 
   const fetchEmployees = async () => {
     try {
       const { data } = await api.get('/users');
-      // Only keep employees or hr (managers can review anyone)
-      setEmployees(data.filter(e => e._id !== currentUser._id));
+      // If department manager, only show employees in their department
+      if (currentUser?.role === 'Manager') {
+        setEmployees(data.filter(e => e._id !== currentUser._id && e.department?._id === currentUser.department?._id));
+      } else {
+        setEmployees(data.filter(e => e._id !== currentUser._id));
+      }
     } catch (err) {
       console.error(err);
     }
@@ -66,6 +71,16 @@ const Performance = () => {
     }
   };
 
+  const fetchTaskMetrics = async (employeeId) => {
+    if (!employeeId) return;
+    try {
+      const { data } = await api.get(`/tasks/performance/${employeeId}`);
+      setTaskMetrics(data);
+    } catch (err) {
+      console.error('Failed to load task metrics', err);
+    }
+  };
+
   useEffect(() => {
     const initData = async () => {
       setLoading(true);
@@ -73,8 +88,11 @@ const Performance = () => {
       if (isManager) {
         await fetchEmployees();
       } else {
-        // If employee, just load their reviews
-        await fetchReviews(currentUser._id);
+        // If employee, load reviews and task metrics
+        await Promise.all([
+          fetchReviews(currentUser._id),
+          fetchTaskMetrics(currentUser._id)
+        ]);
       }
       setLoading(false);
     };
@@ -85,8 +103,10 @@ const Performance = () => {
   useEffect(() => {
     if (isManager && activeEmployeeId) {
       fetchReviews(activeEmployeeId);
+      fetchTaskMetrics(activeEmployeeId);
     } else if (isManager) {
       setReviews([]);
+      setTaskMetrics(null);
     }
   }, [activeEmployeeId, isManager]);
 
@@ -399,6 +419,56 @@ const Performance = () => {
 
             {/* List Review Cards */}
             <div className="space-y-6">
+              {taskMetrics && (
+                <div className="glass p-6 rounded-2xl border border-primary-500/20 bg-primary-500/5 text-left grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="md:col-span-3 pb-2 border-b border-slate-200 dark:border-slate-800/60 flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5 uppercase tracking-wider">
+                      <Sparkles className="text-primary-500 animate-pulse" size={13} /> Task Performance Analytics Insights
+                    </h4>
+                    <span className="text-[9px] text-slate-500 dark:text-slate-400 font-bold">Auto-calculated metrics</span>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase block">Task Completion Rate</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl font-black text-slate-800 dark:text-white">{taskMetrics.completionRate}%</span>
+                      <div className="flex-1 bg-slate-200 dark:bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-350 dark:border-slate-800/55">
+                        <div className="bg-primary-500 h-full rounded-full" style={{ width: `${taskMetrics.completionRate}%` }}></div>
+                      </div>
+                    </div>
+                    <span className="text-[9px] text-slate-550 dark:text-slate-500 font-semibold">Completed: {taskMetrics.completedTasks} / {taskMetrics.totalTasks}</span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase block">Avg Quality Score</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-black text-slate-800 dark:text-white">{taskMetrics.averageRating} / 5</span>
+                      <div className="flex items-center text-amber-500">
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <Star 
+                            key={star} 
+                            size={12} 
+                            className={star <= Math.round(taskMetrics.averageRating) ? 'fill-amber-500 text-amber-500' : 'text-slate-300 dark:text-slate-800'} 
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <span className="text-[9px] text-slate-550 dark:text-slate-500 font-semibold">Based on manager task reviews</span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase block">On-Time Completion</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl font-black text-slate-800 dark:text-white">{taskMetrics.onTimeCompletionRate}%</span>
+                      <div className="flex-1 bg-slate-200 dark:bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-350 dark:border-slate-800/55">
+                        <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${taskMetrics.onTimeCompletionRate}%` }}></div>
+                      </div>
+                    </div>
+                    <span className="text-[9px] text-slate-550 dark:text-slate-500 font-semibold">Tasks finished on or before due date</span>
+                  </div>
+                </div>
+              )}
+
               {reviews.length > 0 ? (
                 reviews.map((rev) => (
                   <div key={rev._id} className="glass rounded-2xl border border-slate-800/65 overflow-hidden text-left relative">

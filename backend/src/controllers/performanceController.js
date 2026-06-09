@@ -2,10 +2,11 @@ const Performance = require('../models/Performance');
 const User = require('../models/User');
 const { generatePerformanceSummary } = require('../utils/aiSummary');
 const { sendNotification } = require('../utils/notificationHelper');
+const { calculateTaskMetrics } = require('./taskController');
 
 // @desc    Create a performance review (triggers AI summary generator)
 // @route   POST /api/performance
-// @access  Private (Admin, HR)
+// @access  Private (Admin, HR, Manager)
 const createReview = async (req, res) => {
   const { employee, goals, ratings, feedback } = req.body;
 
@@ -19,8 +20,12 @@ const createReview = async (req, res) => {
       return res.status(404).json({ message: 'Target employee not found' });
     }
 
+    // Calculate task metrics to augment the review
+    const metrics = await calculateTaskMetrics(employee);
+    const augmentedFeedback = `[Task Completion: ${metrics.completionRate}%, Avg Grade: ${metrics.averageRating}/5, On-Time: ${metrics.onTimeCompletionRate}%]. ${feedback}`;
+
     // Run AI Summary Generator based on ratings and feedback text
-    const aiSummary = generatePerformanceSummary(ratings, feedback);
+    const aiSummary = generatePerformanceSummary(ratings, augmentedFeedback);
 
     // Format goals: expect an array of strings or goals payload
     const formattedGoals = Array.isArray(goals)
@@ -55,12 +60,12 @@ const createReview = async (req, res) => {
 
 // @desc    Get performance review history for a specific employee
 // @route   GET /api/performance/employee/:userId
-// @access  Private (Admin, HR, Owner)
+// @access  Private (Admin, HR, Manager, Owner)
 const getEmployeeReviews = async (req, res) => {
   try {
-    // Authorization: Admin and HR can view anyone's. Employees can only view their own.
+    // Authorization: Admin, HR and Manager can view. Employees can only view their own.
     const isOwner = req.user._id.toString() === req.params.userId;
-    const isManager = req.user.role === 'Admin' || req.user.role === 'HR';
+    const isManager = req.user.role === 'Admin' || req.user.role === 'HR' || req.user.role === 'Manager';
 
     if (!isOwner && !isManager) {
       return res.status(403).json({ message: 'Not authorized to view this employee reviews' });
@@ -79,7 +84,7 @@ const getEmployeeReviews = async (req, res) => {
 
 // @desc    Update employee goal status
 // @route   PUT /api/performance/goal/:reviewId/:goalIndex
-// @access  Private (Admin, HR, Owner)
+// @access  Private (Admin, HR, Manager, Owner)
 const updateGoalStatus = async (req, res) => {
   const { status } = req.body; // status: 'Pending' or 'Completed'
 
@@ -89,9 +94,9 @@ const updateGoalStatus = async (req, res) => {
       return res.status(404).json({ message: 'Performance record not found' });
     }
 
-    // Authorization: Admin, HR, or Owner
+    // Authorization: Admin, HR, Manager, or Owner
     const isOwner = req.user._id.toString() === review.employee.toString();
-    const isManager = req.user.role === 'Admin' || req.user.role === 'HR';
+    const isManager = req.user.role === 'Admin' || req.user.role === 'HR' || req.user.role === 'Manager';
 
     if (!isOwner && !isManager) {
       return res.status(403).json({ message: 'Not authorized to update this performance goal' });

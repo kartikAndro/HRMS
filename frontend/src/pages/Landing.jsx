@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { 
-  Building, 
-  ArrowRight, 
-  Users, 
-  Clock, 
-  CalendarDays, 
-  Search, 
-  Sparkles, 
-  LineChart, 
-  ChevronDown, 
-  Menu, 
+import {
+  Building,
+  ArrowRight,
+  Users,
+  Clock,
+  CalendarDays,
+  Search,
+  Sparkles,
+  LineChart,
+  ChevronDown,
+  Menu,
   X,
   Mail,
   ShieldCheck,
@@ -23,7 +23,7 @@ import {
 const Landing = () => {
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+
   // Accordion state for FAQs
   const [openFaq, setOpenFaq] = useState(null);
 
@@ -139,20 +139,20 @@ const Landing = () => {
     }
   ];
 
-  const testimonials = [
-    {
-      quote: "PulseHR has transformed our operations. The AI screening saved us hours of manual parsing, and leave approval is now fully automated.",
-      author: "Sarah Jenkins",
-      position: "VP of HR, TechVibe Studios",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80"
-    },
-    {
-      quote: "The real-time attendance tracking is exactly what we needed for our hybrid workforce. The dashboard statistics give us clear monthly summaries.",
-      author: "Marcus Vance",
-      position: "COO, Zenith Logistics",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&auto=format&fit=crop&q=80"
-    }
-  ];
+  // const testimonials = [
+  //   {
+  //     quote: "PulseHR has transformed our operations. The AI screening saved us hours of manual parsing, and leave approval is now fully automated.",
+  //     author: "Sarah Jenkins",
+  //     position: "VP of HR, TechVibe Studios",
+  //     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80"
+  //   },
+  //   {
+  //     quote: "The real-time attendance tracking is exactly what we needed for our hybrid workforce. The dashboard statistics give us clear monthly summaries.",
+  //     author: "Marcus Vance",
+  //     position: "COO, Zenith Logistics",
+  //     avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&auto=format&fit=crop&q=80"
+  //   }
+  // ];
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 overflow-x-hidden selection:bg-primary-500 selection:text-white scroll-smooth">
@@ -179,7 +179,7 @@ const Landing = () => {
             <a href="#hero" className="hover:text-white transition">Home</a>
             <a href="#features" className="hover:text-white transition">Features</a>
             <a href="#pricing" className="hover:text-white transition">Pricing</a>
-            <a href="#testimonials" className="hover:text-white transition">Testimonials</a>
+            {/* <a href="#testimonials" className="hover:text-white transition">Testimonials</a> */}
             <a href="#faq" className="hover:text-white transition">FAQ</a>
             <a href="#contact" className="hover:text-white transition">Contact</a>
           </nav>
@@ -187,8 +187,8 @@ const Landing = () => {
           {/* CTAs */}
           <div className="hidden md:flex items-center gap-4">
             {user ? (
-              <Link 
-                to="/dashboard" 
+              <Link
+                to="/dashboard"
                 className="px-5 py-2.5 bg-primary-600 hover:bg-primary-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-primary-600/10 transition flex items-center gap-1.5"
               >
                 Dashboard <ArrowRight size={14} />
@@ -198,8 +198,8 @@ const Landing = () => {
                 <Link to="/login" className="text-xs font-bold text-slate-300 hover:text-white transition">
                   Book Demo
                 </Link>
-                <Link 
-                  to="/login" 
+                <Link
+                  to="/login"
                   className="px-5 py-2.5 bg-primary-600 hover:bg-primary-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-primary-600/10 transition"
                 >
                   Start Free Trial
@@ -209,7 +209,7 @@ const Landing = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <button 
+          <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-1 rounded-lg text-slate-450 hover:bg-slate-800/60 hover:text-white md:hidden text-slate-400"
           >
@@ -229,8 +229,8 @@ const Landing = () => {
           <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="text-lg font-bold text-slate-300 hover:text-white">Contact</a>
           <div className="pt-6 border-t border-slate-800/80 flex flex-col gap-4">
             {user ? (
-              <Link 
-                to="/dashboard" 
+              <Link
+                to="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full text-center py-3 bg-primary-600 text-white text-sm font-bold rounded-xl"
               >
@@ -238,15 +238,15 @@ const Landing = () => {
               </Link>
             ) : (
               <>
-                <Link 
-                  to="/login" 
+                <Link
+                  to="/login"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full text-center py-3 bg-slate-900 border border-slate-800 text-slate-300 text-sm font-bold rounded-xl"
                 >
                   Book Demo
                 </Link>
-                <Link 
-                  to="/login" 
+                <Link
+                  to="/login"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full text-center py-3 bg-primary-600 text-white text-sm font-bold rounded-xl"
                 >
@@ -280,14 +280,14 @@ const Landing = () => {
 
         {/* Call to Actions */}
         <div className="flex flex-col sm:flex-row gap-4 mt-10 w-full sm:w-auto">
-          <Link 
-            to="/login" 
+          <Link
+            to="/login"
             className="px-8 py-3.5 bg-primary-600 hover:bg-primary-500 text-white font-bold rounded-xl shadow-lg shadow-primary-600/20 transition-all duration-200 text-center"
           >
             Start Free Trial
           </Link>
-          <Link 
-            to="/login" 
+          <Link
+            to="/login"
             className="px-8 py-3.5 bg-slate-900 border border-slate-800 text-slate-200 hover:text-white font-bold rounded-xl transition duration-200 text-center"
           >
             Schedule Demo
@@ -345,8 +345,8 @@ const Landing = () => {
             {featuresList.map((f, i) => {
               const Icon = f.icon;
               return (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className="glass-card p-6 rounded-2xl border border-slate-800/60 hover:border-slate-700/60 transition duration-300 hover:-translate-y-1 hover:shadow-lg space-y-4"
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${f.color}`}>
@@ -362,18 +362,18 @@ const Landing = () => {
       </section>
 
       {/* 3. TESTIMONIALS SECTION */}
-      <section id="testimonials" className="scroll-mt-20 py-20 px-6 max-w-7xl mx-auto space-y-12">
-        {/* Section Header */}
-        <div className="text-center space-y-3">
+      {/* <section id="testimonials" className="scroll-mt-20 py-20 px-6 max-w-7xl mx-auto space-y-12"> */}
+      {/* Section Header */}
+      {/* <div className="text-center space-y-3">
           <span className="text-xs font-bold text-primary-400 uppercase tracking-widest">Success Stories</span>
           <h2 className="text-3xl md:text-4xl font-extrabold text-white">Loved by HR Leaders Worldwide</h2>
           <p className="text-slate-400 max-w-xl mx-auto text-sm">
             Read comments from administrators and managers who have simplified their workflows with PulseHR.
           </p>
-        </div>
+        </div> */}
 
-        {/* Testimonials grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+      {/* Testimonials grid */}
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {testimonials.map((t, i) => (
             <div key={i} className="glass p-6 md:p-8 rounded-2xl border border-slate-800/60 flex flex-col justify-between space-y-6">
               <p className="text-sm italic text-slate-300 leading-relaxed">
@@ -392,8 +392,8 @@ const Landing = () => {
               </div>
             </div>
           ))}
-        </div>
-      </section>
+        </div> */}
+      {/* </section> */}
 
       {/* 4. PRICING SECTION */}
       <section id="pricing" className="scroll-mt-20 py-20 bg-slate-900/20 border-y border-slate-900 px-6">
@@ -410,25 +410,24 @@ const Landing = () => {
           {/* Pricing Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
             {pricingTiers.map((p, i) => (
-              <div 
-                key={i} 
-                className={`glass-card rounded-2xl p-6 md:p-8 border flex flex-col justify-between space-y-6 relative hover:border-slate-700/60 transition duration-300 ${
-                  p.popular 
-                    ? 'border-primary-500/40 shadow-xl shadow-primary-500/5 ring-1 ring-primary-500/20 scale-102 md:scale-105 bg-slate-900/60' 
-                    : 'border-slate-800/60 bg-slate-950/40'
-                }`}
+              <div
+                key={i}
+                className={`glass-card rounded-2xl p-6 md:p-8 border flex flex-col justify-between space-y-6 relative hover:border-slate-700/60 transition duration-300 ${p.popular
+                  ? 'border-primary-500/40 shadow-xl shadow-primary-500/5 ring-1 ring-primary-500/20 scale-102 md:scale-105 bg-slate-900/60'
+                  : 'border-slate-800/60 bg-slate-950/40'
+                  }`}
               >
                 {p.popular && (
                   <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary-600 text-[10px] font-black text-white uppercase tracking-widest rounded-full shadow-md">
                     Most Popular
                   </span>
                 )}
-                
+
                 {/* Plan Details */}
                 <div className="space-y-4">
                   <h4 className="text-lg font-bold text-white">{p.name}</h4>
                   <p className="text-xs text-slate-400 leading-relaxed">{p.description}</p>
-                  
+
                   {/* Price */}
                   <div className="flex items-baseline gap-1 py-2">
                     <span className="text-4xl font-black text-white">{p.price}</span>
@@ -449,11 +448,10 @@ const Landing = () => {
                 {/* Call to action */}
                 <Link
                   to="/login"
-                  className={`w-full py-3 text-center text-xs font-bold rounded-xl transition-all duration-200 block ${
-                    p.popular
-                      ? 'bg-primary-600 hover:bg-primary-500 text-white shadow-lg shadow-primary-600/10'
-                      : 'bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800'
-                  }`}
+                  className={`w-full py-3 text-center text-xs font-bold rounded-xl transition-all duration-200 block ${p.popular
+                    ? 'bg-primary-600 hover:bg-primary-500 text-white shadow-lg shadow-primary-600/10'
+                    : 'bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800'
+                    }`}
                 >
                   {p.cta}
                 </Link>
@@ -477,8 +475,8 @@ const Landing = () => {
         {/* FAQs Accordion */}
         <div className="max-w-3xl mx-auto space-y-4">
           {faqs.map((faq, idx) => (
-            <div 
-              key={idx} 
+            <div
+              key={idx}
               className="glass rounded-xl border border-slate-800/60 overflow-hidden transition-all duration-200"
             >
               <button
@@ -486,18 +484,16 @@ const Landing = () => {
                 className="w-full px-6 py-4 flex items-center justify-between gap-4 text-left font-bold text-sm text-slate-200 hover:text-white hover:bg-slate-900/20 transition"
               >
                 <span className="flex items-center gap-2"><HelpCircle size={15} className="text-primary-500" /> {faq.question}</span>
-                <ChevronDown 
-                  size={16} 
-                  className={`text-slate-500 transition-transform duration-200 flex-shrink-0 ${
-                    openFaq === idx ? 'rotate-180 text-primary-400' : ''
-                  }`}
+                <ChevronDown
+                  size={16}
+                  className={`text-slate-500 transition-transform duration-200 flex-shrink-0 ${openFaq === idx ? 'rotate-180 text-primary-400' : ''
+                    }`}
                 />
               </button>
-              
-              <div 
-                className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                  openFaq === idx ? 'max-h-[200px] border-t border-slate-800/40' : 'max-h-0'
-                }`}
+
+              <div
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${openFaq === idx ? 'max-h-[200px] border-t border-slate-800/40' : 'max-h-0'
+                  }`}
               >
                 <p className="px-6 py-4 text-xs text-slate-400 leading-relaxed bg-slate-900/10">
                   {faq.answer}
@@ -511,7 +507,7 @@ const Landing = () => {
       {/* 6. CONTACT SECTION */}
       <section id="contact" className="scroll-mt-20 py-20 bg-slate-900/10 border-t border-slate-900 px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          
+
           {/* Info Details */}
           <div className="space-y-6">
             <span className="text-xs font-bold text-primary-400 uppercase tracking-widest">Connect</span>
@@ -519,7 +515,7 @@ const Landing = () => {
             <p className="text-slate-400 text-sm leading-relaxed">
               Have unique payroll compliance configurations or department architectures? Contact our operations specialists for customized integrations or a tailored walkthrough demo.
             </p>
-            
+
             <div className="space-y-4 pt-4 text-sm text-slate-300">
               <div className="flex items-center gap-3">
                 <Mail size={16} className="text-primary-500" />

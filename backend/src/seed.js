@@ -8,6 +8,7 @@ const Job = require('./models/Job');
 const Candidate = require('./models/Candidate');
 const Performance = require('./models/Performance');
 const Notification = require('./models/Notification');
+const Task = require('./models/Task');
 const { parseResumeAndScore } = require('./utils/aiParser');
 const { generatePerformanceSummary } = require('./utils/aiSummary');
 
@@ -28,6 +29,7 @@ const seedData = async () => {
     await Candidate.deleteMany();
     await Performance.deleteMany();
     await Notification.deleteMany();
+    await Task.deleteMany();
     console.log('Cleared all collections.');
 
     // 1. Create Departments
@@ -70,6 +72,17 @@ const seedData = async () => {
       salary: 75000,
     });
 
+    // Engineering Manager
+    const engManager = await User.create({
+      name: 'Alex Eng Manager',
+      email: 'manager@hr.com',
+      password: 'ManagerPassword123',
+      role: 'Manager',
+      department: engineering._id,
+      position: 'Engineering Manager',
+      salary: 105000,
+    });
+
     // Employee 1
     const emp1 = await User.create({
       name: 'John Employee',
@@ -93,6 +106,15 @@ const seedData = async () => {
     });
 
     console.log('Created users.');
+
+    // 2b. Assign Managers to Departments
+    engineering.manager = engManager._id;
+    await engineering.save();
+
+    hrDept.manager = hr._id;
+    await hrDept.save();
+
+    console.log('Assigned managers to departments.');
 
     // 3. Create Jobs
     const job1 = await Job.create({
@@ -144,9 +166,52 @@ const seedData = async () => {
 
     console.log('Created candidates.');
 
-    // 5. Create Performance Reviews (using AI summary helper)
+    // 5. Seed Tasks
+    await Task.create({
+      title: 'Build UI for Task Assignment',
+      description: 'Implement a gorgeous list view and modals for assigning tasks on the frontend.',
+      assignedTo: emp1._id,
+      assignedBy: engManager._id,
+      department: engineering._id,
+      status: 'Completed',
+      dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+      completedAt: new Date(Date.now() - 12 * 60 * 60 * 1000), // completed on time
+      rating: 5,
+      feedback: 'Excellent work building a very polished theme switcher and task board.',
+    });
+
+    await Task.create({
+      title: 'Design API endpoint for Task metrics',
+      description: 'Define and implement task statistics and performance aggregation calculations on the backend.',
+      assignedTo: emp1._id,
+      assignedBy: engManager._id,
+      department: engineering._id,
+      status: 'In-Progress',
+      dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+    });
+
+    await Task.create({
+      title: 'Conduct Employee Onboarding',
+      description: 'Hold onboarding calls and prepare paperwork for candidate Bob Recruiter.',
+      assignedTo: hr._id,
+      assignedBy: admin._id,
+      department: hrDept._id,
+      status: 'Pending',
+      dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+    });
+
+    console.log('Created tasks.');
+
+    // 6. Create Performance Reviews (using AI summary helper)
     const reviewRatings = { quality: 4, teamwork: 5, communication: 3, productivity: 4 };
-    const reviewFeedback = 'Excellent code quality and team collaborative mindset. Communication regarding blockers during sprints can be improved.';
+    
+    // Calculate John Employee's task metrics
+    const tasks = await Task.find({ assignedTo: emp1._id });
+    const completed = tasks.filter(t => t.status === 'Completed');
+    const avgRating = completed.reduce((sum, t) => sum + (t.rating || 4), 0) / (completed.length || 1);
+    const completionRate = Math.round((completed.length / tasks.length) * 100);
+
+    const reviewFeedback = `Task completion rate: ${completionRate}%. Avg task quality: ${avgRating}/5. Excellent code quality and team collaborative mindset. Communication regarding blockers during sprints can be improved.`;
     const reviewGoals = [
       { text: 'Complete React Native Certification course', status: 'Pending' },
       { text: 'Lead the next two core deployment cycles', status: 'Completed' }
@@ -155,7 +220,7 @@ const seedData = async () => {
     const aiSummary = generatePerformanceSummary(reviewRatings, reviewFeedback);
     await Performance.create({
       employee: emp1._id,
-      reviewer: hr._id,
+      reviewer: engManager._id,
       goals: reviewGoals,
       ratings: reviewRatings,
       feedback: reviewFeedback,
@@ -164,7 +229,7 @@ const seedData = async () => {
 
     console.log('Created performance reviews.');
 
-    // 6. Create Notifications
+    // 7. Create Notifications
     await Notification.create({
       user: admin._id,
       type: 'JobApplication',
@@ -180,7 +245,7 @@ const seedData = async () => {
     await Notification.create({
       user: emp1._id,
       type: 'PerformanceReview',
-      message: `A new performance review has been published by your manager, Jane HR Manager`
+      message: `A new performance review has been published by your manager, Alex Eng Manager`
     });
 
     console.log('Created notifications.');

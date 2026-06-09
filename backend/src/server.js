@@ -28,6 +28,7 @@ app.use('/api/attendance', require('./routes/attendanceRoutes'));
 app.use('/api/leaves', require('./routes/leaveRoutes'));
 app.use('/api/jobs', require('./routes/jobRoutes'));
 app.use('/api/candidates', require('./routes/candidateRoutes'));
+app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/performance', require('./routes/performanceRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 

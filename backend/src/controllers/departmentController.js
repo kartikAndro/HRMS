@@ -2,11 +2,9 @@ const Department = require('../models/Department');
 const User = require('../models/User');
 
 // @desc    Get all departments
-// @route   GET /api/departments
-// @access  Private
 const getDepartments = async (req, res) => {
   try {
-    const departments = await Department.find({});
+    const departments = await Department.find({}).populate('manager', 'name email position profileImage');
     res.json(departments);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -17,7 +15,7 @@ const getDepartments = async (req, res) => {
 // @route   POST /api/departments
 // @access  Private (Admin, HR)
 const createDepartment = async (req, res) => {
-  const { name, description } = req.body;
+  const { name, description, manager } = req.body;
 
   try {
     if (!name) {
@@ -29,12 +27,69 @@ const createDepartment = async (req, res) => {
       return res.status(400).json({ message: 'Department already exists' });
     }
 
-    const department = await Department.create({
+    const departmentPayload = {
       name: name.trim(),
       description,
-    });
+    };
 
-    res.status(201).json(department);
+    if (manager && manager !== 'null' && manager !== '') {
+      departmentPayload.manager = manager;
+    }
+
+    const department = await Department.create(departmentPayload);
+
+    // If manager is assigned, update user role to 'Manager'
+    if (manager && manager !== 'null' && manager !== '') {
+      await User.findByIdAndUpdate(manager, { role: 'Manager' });
+    }
+
+    const populatedDept = await Department.findById(department._id).populate('manager', 'name email position profileImage');
+    res.status(201).json(populatedDept);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Update department
+// @route   PUT /api/departments/:id
+// @access  Private (Admin, HR)
+const updateDepartment = async (req, res) => {
+  const { name, description, manager } = req.body;
+
+  try {
+    const dept = await Department.findById(req.params.id);
+    if (!dept) {
+      return res.status(404).json({ message: 'Department not found' });
+    }
+
+    if (name) dept.name = name.trim();
+    if (description !== undefined) dept.description = description;
+    
+    if (manager !== undefined) {
+      // If there was an old manager, demote them to 'Employee' unless they are Admin or HR
+      if (dept.manager && dept.manager.toString() !== manager) {
+        const oldManager = await User.findById(dept.manager);
+        if (oldManager && oldManager.role === 'Manager') {
+          oldManager.role = 'Employee';
+          await oldManager.save();
+        }
+      }
+
+      dept.manager = (manager === 'null' || manager === '') ? null : manager;
+
+      // Update new manager's role to 'Manager'
+      if (manager && manager !== 'null' && manager !== '') {
+        const newManager = await User.findById(manager);
+        if (newManager && newManager.role === 'Employee') {
+          newManager.role = 'Manager';
+          await newManager.save();
+        }
+      }
+    }
+
+    await dept.save();
+    const populatedDept = await Department.findById(dept._id).populate('manager', 'name email position profileImage');
+    res.json(populatedDept);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -50,6 +105,15 @@ const deleteDepartment = async (req, res) => {
       return res.status(404).json({ message: 'Department not found' });
     }
 
+    // Demote manager if deleting department
+    if (dept.manager) {
+      const managerUser = await User.findById(dept.manager);
+      if (managerUser && managerUser.role === 'Manager') {
+        managerUser.role = 'Employee';
+        await managerUser.save();
+      }
+    }
+
     // Unassign department from users
     await User.updateMany({ department: req.params.id }, { department: null });
 
@@ -63,5 +127,6 @@ const deleteDepartment = async (req, res) => {
 module.exports = {
   getDepartments,
   createDepartment,
+  updateDepartment,
   deleteDepartment,
 };

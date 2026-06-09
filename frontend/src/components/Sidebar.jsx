@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   Briefcase,
-  LineChart
+  LineChart,
+  CheckSquare
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
@@ -29,43 +30,49 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       to: '/dashboard',
       label: 'Dashboard',
       icon: LayoutDashboard,
-      roles: ['Admin', 'HR', 'Employee'],
+      roles: ['Admin', 'HR', 'Manager', 'Employee'],
     },
     {
       to: '/employees',
       label: 'Employees',
       icon: Users,
-      roles: ['Admin', 'HR'],
+      roles: ['Admin', 'HR', 'Manager'],
+    },
+    {
+      to: '/tasks',
+      label: 'Tasks',
+      icon: CheckSquare,
+      roles: ['Admin', 'HR', 'Manager', 'Employee'],
     },
     {
       to: '/recruitment',
       label: 'Recruitment',
       icon: Briefcase,
-      roles: ['Admin', 'HR', 'Employee'],
+      roles: ['Admin', 'HR', 'Manager', 'Employee'],
     },
     {
       to: '/attendance',
       label: 'Attendance',
       icon: Clock,
-      roles: ['Admin', 'HR', 'Employee'],
+      roles: ['Admin', 'HR', 'Manager', 'Employee'],
     },
     {
       to: '/leaves',
       label: 'Leaves',
       icon: CalendarDays,
-      roles: ['Admin', 'HR', 'Employee'],
+      roles: ['Admin', 'HR', 'Manager', 'Employee'],
     },
     {
       to: '/performance',
       label: 'Performance',
       icon: LineChart,
-      roles: ['Admin', 'HR', 'Employee'],
+      roles: ['Admin', 'HR', 'Manager', 'Employee'],
     },
     {
       to: '/profile',
       label: 'My Profile',
       icon: User,
-      roles: ['Admin', 'HR', 'Employee'],
+      roles: ['Admin', 'HR', 'Manager', 'Employee'],
     },
   ];
 

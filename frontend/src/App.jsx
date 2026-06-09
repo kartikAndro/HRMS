@@ -13,6 +13,7 @@ import Unauthorized from './pages/Unauthorized';
 import Landing from './pages/Landing';
 import Recruitment from './pages/Recruitment';
 import Performance from './pages/Performance';
+import Tasks from './pages/Tasks';
 import NotificationBell from './components/NotificationBell';
 import { Menu, Sun, Moon } from 'lucide-react';
 
@@ -103,16 +104,17 @@ const AppRoutes = () => {
       <Route path="/unauthorized" element={<Unauthorized />} />
       
       {/* Protected routes */}
-      <Route element={<ProtectedRoute allowedRoles={['Admin', 'HR', 'Employee']} />}>
+      <Route element={<ProtectedRoute allowedRoles={['Admin', 'HR', 'Manager', 'Employee']} />}>
         <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
         <Route path="/attendance" element={<Layout><Attendance /></Layout>} />
         <Route path="/leaves" element={<Layout><Leaves /></Layout>} />
         <Route path="/profile" element={<Layout><Profile /></Layout>} />
         <Route path="/recruitment" element={<Layout><Recruitment /></Layout>} />
         <Route path="/performance" element={<Layout><Performance /></Layout>} />
+        <Route path="/tasks" element={<Layout><Tasks /></Layout>} />
       </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={['Admin', 'HR']} />}>
+      <Route element={<ProtectedRoute allowedRoles={['Admin', 'HR', 'Manager']} />}>
         <Route path="/employees" element={<Layout><Employees /></Layout>} />
       </Route>
 

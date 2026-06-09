@@ -79,6 +79,7 @@ export const AuthProvider = ({ children }) => {
         refreshProfile,
         isAdmin: user?.role === 'Admin',
         isHR: user?.role === 'HR',
+        isManager: user?.role === 'Manager',
         isEmployee: user?.role === 'Employee',
       }}
     >
