@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Building, Lock, Mail, Shield, Users, User } from 'lucide-react';
 
@@ -130,6 +130,13 @@ const Login = () => {
             )}
           </button>
         </form>
+
+        <p className="text-center text-xs text-slate-400 mt-6">
+          Don't have a company account?{' '}
+          <Link to="/register-company" className="text-primary-400 hover:text-primary-300 font-bold hover:underline transition">
+            Register Company
+          </Link>
+        </p>
 
         {/* Quick Seeding accounts for review/testing */}
         <div className="mt-8 pt-6 border-t border-slate-800/60">

@@ -4,7 +4,7 @@ const { sendNotification } = require('../utils/notificationHelper');
 
 // @desc    Create a leave request
 // @route   POST /api/leaves
-// @access  Private (Employee only, though open to all roles acting as employees)
+// @access  Private (Employee only)
 const createLeaveRequest = async (req, res) => {
   const { leaveType, startDate, endDate, reason } = req.body;
 
@@ -23,23 +23,25 @@ const createLeaveRequest = async (req, res) => {
       startDate,
       endDate,
       reason,
+      company: req.companyId,
     });
 
-    const populatedLeave = await Leave.findById(leave._id).populate('employee', 'name email position');
+    const populatedLeave = await Leave.findOne({ _id: leave._id, company: req.companyId }).populate('employee', 'name email position');
 
-    // Notify all HR Managers and Admins
-    const managers = await User.find({ role: { $in: ['Admin', 'HR'] } });
+    // Notify all HR Managers and Admins in the same company
+    const managers = await User.find({ role: { $in: ['Admin', 'HR'] }, company: req.companyId });
     for (const mgr of managers) {
       await sendNotification(
         mgr._id,
         'LeaveRequest',
-        `New leave request (${leaveType}) submitted by ${req.user.name}`
+        `New leave request (${leaveType}) submitted by ${req.user.name}`,
+        req.companyId
       );
     }
 
     res.status(201).json(populatedLeave);
   } catch (error) {
-    res.status(550).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -48,7 +50,7 @@ const createLeaveRequest = async (req, res) => {
 // @access  Private
 const getMyLeaves = async (req, res) => {
   try {
-    const leaves = await Leave.find({ employee: req.user._id }).sort({ createdAt: -1 });
+    const leaves = await Leave.find({ employee: req.user._id, company: req.companyId }).sort({ createdAt: -1 });
     res.json(leaves);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -60,7 +62,7 @@ const getMyLeaves = async (req, res) => {
 // @access  Private (Admin, HR)
 const getAllLeaves = async (req, res) => {
   try {
-    const leaves = await Leave.find({})
+    const leaves = await Leave.find({ company: req.companyId })
       .populate('employee', 'name email position role status department')
       .populate('approvedBy', 'name email')
       .sort({ createdAt: -1 });
@@ -81,7 +83,7 @@ const updateLeaveStatus = async (req, res) => {
       return res.status(400).json({ message: 'Valid status is required (Approved or Rejected)' });
     }
 
-    const leave = await Leave.findById(req.params.id);
+    const leave = await Leave.findOne({ _id: req.params.id, company: req.companyId });
 
     if (!leave) {
       return res.status(404).json({ message: 'Leave request not found' });
@@ -104,10 +106,11 @@ const updateLeaveStatus = async (req, res) => {
     await sendNotification(
       leave.employee,
       'LeaveRequest',
-      `Your leave request (${leave.leaveType}) has been ${status}`
+      `Your leave request (${leave.leaveType}) has been ${status}`,
+      req.companyId
     );
 
-    const updatedLeave = await Leave.findById(leave._id)
+    const updatedLeave = await Leave.findOne({ _id: leave._id, company: req.companyId })
       .populate('employee', 'name email position')
       .populate('approvedBy', 'name email');
 

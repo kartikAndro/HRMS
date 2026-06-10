@@ -6,8 +6,9 @@ const { sendNotification } = require('../utils/notificationHelper');
 const { generatePerformanceSummary } = require('../utils/aiSummary');
 
 // Helper to calculate task performance metrics
-const calculateTaskMetrics = async (userId) => {
-  const tasks = await Task.find({ assignedTo: userId });
+const calculateTaskMetrics = async (userId, companyId) => {
+  const query = companyId ? { assignedTo: userId, company: companyId } : { assignedTo: userId };
+  const tasks = await Task.find(query);
 
   if (tasks.length === 0) {
     return {
@@ -62,14 +63,14 @@ const createTask = async (req, res) => {
       return res.status(400).json({ message: 'All fields (title, description, assignedTo, dueDate) are required' });
     }
 
-    const assignee = await User.findById(assignedTo);
+    const assignee = await User.findOne({ _id: assignedTo, company: req.companyId });
     if (!assignee) {
-      return res.status(404).json({ message: 'Assignee not found' });
+      return res.status(404).json({ message: 'Assignee not found or access denied' });
     }
 
     // Role restrictions: Manager can only assign to employees in their own department
     if (req.user.role === 'Manager') {
-      const dept = await Department.findOne({ manager: req.user._id });
+      const dept = await Department.findOne({ manager: req.user._id, company: req.companyId });
       if (!dept || assignee.department?.toString() !== dept._id.toString()) {
         return res.status(403).json({ message: 'Managers can only assign tasks to employees in their own department' });
       }
@@ -82,16 +83,18 @@ const createTask = async (req, res) => {
       assignedBy: req.user._id,
       department: assignee.department,
       dueDate,
+      company: req.companyId,
     });
 
     // Notify employee about new task
     await sendNotification(
       assignedTo,
       'TaskAssigned',
-      `You have been assigned a new task: "${title}" by ${req.user.name}`
+      `You have been assigned a new task: "${title}" by ${req.user.name}`,
+      req.companyId
     );
 
-    const populatedTask = await Task.findById(task._id)
+    const populatedTask = await Task.findOne({ _id: task._id, company: req.companyId })
       .populate('assignedTo', 'name email position')
       .populate('assignedBy', 'name email position');
 
@@ -106,13 +109,13 @@ const createTask = async (req, res) => {
 // @access  Private
 const getTasks = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.companyId };
 
     if (req.user.role === 'Employee') {
       filter.assignedTo = req.user._id;
     } else if (req.user.role === 'Manager') {
       // Find the department managed by this user
-      const dept = await Department.findOne({ manager: req.user._id });
+      const dept = await Department.findOne({ manager: req.user._id, company: req.companyId });
       if (dept) {
         filter.department = dept._id;
       } else {
@@ -143,7 +146,7 @@ const updateTaskStatus = async (req, res) => {
       return res.status(400).json({ message: 'Invalid task status' });
     }
 
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findOne({ _id: req.params.id, company: req.companyId });
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
@@ -169,11 +172,12 @@ const updateTaskStatus = async (req, res) => {
       await sendNotification(
         task.assignedBy,
         'TaskStatusUpdate',
-        `${req.user.name} updated the status of "${task.title}" to ${status}`
+        `${req.user.name} updated the status of "${task.title}" to ${status}`,
+        req.companyId
       );
     }
 
-    const populatedTask = await Task.findById(task._id)
+    const populatedTask = await Task.findOne({ _id: task._id, company: req.companyId })
       .populate('assignedTo', 'name email position department')
       .populate('assignedBy', 'name email position');
 
@@ -233,7 +237,7 @@ const reviewTask = async (req, res) => {
       return res.status(400).json({ message: 'Rating/ratings and feedback are required' });
     }
 
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findOne({ _id: req.params.id, company: req.companyId });
     if (!task) {
       return res.status(404).json({ message: 'Task not found' });
     }
@@ -244,7 +248,13 @@ const reviewTask = async (req, res) => {
 
     // Authorization: Only the assigner, or a Manager of that department, or Admin/HR
     const isAssigner = task.assignedBy.toString() === req.user._id.toString();
-    const isDeptManager = req.user.role === 'Manager' && task.department?.toString() === (await Department.findOne({ manager: req.user._id }))?._id.toString();
+    
+    let isDeptManager = false;
+    if (req.user.role === 'Manager') {
+      const dept = await Department.findOne({ manager: req.user._id, company: req.companyId });
+      isDeptManager = dept && task.department?.toString() === dept._id.toString();
+    }
+    
     const isAdminHR = req.user.role === 'Admin' || req.user.role === 'HR';
 
     if (!isAssigner && !isDeptManager && !isAdminHR) {
@@ -257,8 +267,7 @@ const reviewTask = async (req, res) => {
     await task.save();
 
     // Automatically create a Performance review
-    // Calculate current task metrics to augment the review (including the newly rated task)
-    const metrics = await calculateTaskMetrics(task.assignedTo);
+    const metrics = await calculateTaskMetrics(task.assignedTo, req.companyId);
     const augmentedFeedback = `[Task Completion: ${metrics.completionRate}%, Avg Grade: ${metrics.averageRating}/5, On-Time: ${metrics.onTimeCompletionRate}%]. Task: "${task.title}". ${feedback}`;
     const aiSummary = generatePerformanceSummary(finalRatings, augmentedFeedback);
 
@@ -268,23 +277,26 @@ const reviewTask = async (req, res) => {
       ratings: finalRatings,
       feedback: `Task Review: "${task.title}" - ${feedback}`,
       aiSummary,
-      goals: []
+      goals: [],
+      company: req.companyId,
     });
 
     // Notify employee about task feedback and new performance review
     await sendNotification(
       task.assignedTo,
       'TaskReviewed',
-      `Your task "${task.title}" has been reviewed by ${req.user.name}. Grade: ${Math.round(avgRating * 10) / 10}/5`
+      `Your task "${task.title}" has been reviewed by ${req.user.name}. Grade: ${Math.round(avgRating * 10) / 10}/5`,
+      req.companyId
     );
 
     await sendNotification(
       task.assignedTo,
       'PerformanceReview',
-      `A new performance review has been published from your task evaluation by ${req.user.name}`
+      `A new performance review has been published from your task evaluation by ${req.user.name}`,
+      req.companyId
     );
 
-    const populatedTask = await Task.findById(task._id)
+    const populatedTask = await Task.findOne({ _id: task._id, company: req.companyId })
       .populate('assignedTo', 'name email position department')
       .populate('assignedBy', 'name email position');
 
@@ -299,7 +311,6 @@ const reviewTask = async (req, res) => {
 // @access  Private
 const getEmployeeTaskMetrics = async (req, res) => {
   try {
-    // Only allow Admin, HR, the employee themselves, or the department manager to view metrics
     const isSelf = req.user._id.toString() === req.params.userId;
     const isDeptManager = req.user.role === 'Manager';
     const isHRAdmin = req.user.role === 'Admin' || req.user.role === 'HR';
@@ -308,7 +319,13 @@ const getEmployeeTaskMetrics = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to view performance metrics' });
     }
 
-    const metrics = await calculateTaskMetrics(req.params.userId);
+    // Verify the target user belongs to the same company
+    const employee = await User.findOne({ _id: req.params.userId, company: req.companyId });
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+
+    const metrics = await calculateTaskMetrics(req.params.userId, req.companyId);
     res.json(metrics);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -321,5 +338,5 @@ module.exports = {
   updateTaskStatus,
   reviewTask,
   getEmployeeTaskMetrics,
-  calculateTaskMetrics, // Export helper for performance integration
+  calculateTaskMetrics,
 };

@@ -20,8 +20,12 @@ const createCandidate = async (req, res) => {
       return res.status(404).json({ message: 'Target job opening not found' });
     }
 
+    const companyId = targetJob.company;
+    if (!companyId) {
+      return res.status(400).json({ message: 'Target job is not linked to any company' });
+    }
+
     // Retrieve Cloudinary URL from middleware upload buffer, if any
-    console.log(req.cloudinaryUrl,'req.clo')
     const resumeUrl = req.cloudinaryUrl || '';
 
     // Run AI resume parsing & candidate matching score calculation
@@ -35,22 +39,24 @@ const createCandidate = async (req, res) => {
       resumeUrl,
       notes,
       extractedInfo,
-      aiMatch
+      aiMatch,
+      company: companyId,
     });
 
-    // Notify Admins and HR Managers about this new application
-    const managers = await User.find({ role: { $in: ['Admin', 'HR'] } });
+    // Notify Admins and HR Managers about this new application in the same company
+    const managers = await User.find({ role: { $in: ['Admin', 'HR'] }, company: companyId });
     for (const mgr of managers) {
       await sendNotification(
         mgr._id,
         'JobApplication',
-        `New application from ${name} for ${targetJob.title} (${aiMatch.matchPercentage}% match)`
+        `New application from ${name} for ${targetJob.title} (${aiMatch.matchPercentage}% match)`,
+        companyId
       );
     }
 
     res.status(201).json(candidate);
   } catch (error) {
-    res.status(550).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -59,7 +65,12 @@ const createCandidate = async (req, res) => {
 // @access  Private (Admin, HR)
 const getCandidatesByJob = async (req, res) => {
   try {
-    const candidates = await Candidate.find({ job: req.params.jobId }).sort({ createdAt: -1 });
+    const targetJob = await Job.findOne({ _id: req.params.jobId, company: req.companyId });
+    if (!targetJob) {
+      return res.status(404).json({ message: 'Job opening not found or access denied' });
+    }
+
+    const candidates = await Candidate.find({ job: req.params.jobId, company: req.companyId }).sort({ createdAt: -1 });
     res.json(candidates);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -71,7 +82,7 @@ const getCandidatesByJob = async (req, res) => {
 // @access  Private (Admin, HR)
 const getCandidateById = async (req, res) => {
   try {
-    const candidate = await Candidate.findById(req.params.id).populate('job', 'title department');
+    const candidate = await Candidate.findOne({ _id: req.params.id, company: req.companyId }).populate('job', 'title department');
     if (!candidate) {
       return res.status(404).json({ message: 'Candidate not found' });
     }
@@ -88,7 +99,7 @@ const updateCandidateStatus = async (req, res) => {
   const { status, notes } = req.body;
 
   try {
-    const candidate = await Candidate.findById(req.params.id).populate('job', 'title');
+    const candidate = await Candidate.findOne({ _id: req.params.id, company: req.companyId }).populate('job', 'title');
     if (!candidate) {
       return res.status(404).json({ message: 'Candidate application not found' });
     }
@@ -100,12 +111,13 @@ const updateCandidateStatus = async (req, res) => {
 
     // Trigger notification if candidate status changes to Hired or Offered
     if (status === 'Hired' || status === 'Offered') {
-      const managers = await User.find({ role: { $in: ['Admin', 'HR'] } });
+      const managers = await User.find({ role: { $in: ['Admin', 'HR'] }, company: req.companyId });
       for (const mgr of managers) {
         await sendNotification(
           mgr._id,
           'JobApplication',
-          `Application for ${candidate.name} updated to ${status} for ${candidate.job?.title}`
+          `Application for ${candidate.name} updated to ${status} for ${candidate.job?.title}`,
+          req.companyId
         );
       }
     }

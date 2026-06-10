@@ -11,6 +11,7 @@ import Leaves from './pages/Leaves';
 import Profile from './pages/Profile';
 import Unauthorized from './pages/Unauthorized';
 import Landing from './pages/Landing';
+import RegisterCompany from './pages/RegisterCompany';
 import Recruitment from './pages/Recruitment';
 import Performance from './pages/Performance';
 import Tasks from './pages/Tasks';
@@ -101,6 +102,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/register-company" element={<RegisterCompany />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
       
       {/* Protected routes */}

@@ -3,7 +3,7 @@ const User = require('../models/User');
 
 // @desc    Check-in for the day
 // @route   POST /api/attendance/check-in
-// @access  Private (Employee only, or allowed for all, but typically employees check-in)
+// @access  Private (Employee only)
 const checkIn = async (req, res) => {
   const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
@@ -12,6 +12,7 @@ const checkIn = async (req, res) => {
     const existingRecord = await Attendance.findOne({
       employee: req.user._id,
       date: today,
+      company: req.companyId,
     });
 
     if (existingRecord) {
@@ -33,6 +34,7 @@ const checkIn = async (req, res) => {
       date: today,
       checkIn: checkInTime,
       status,
+      company: req.companyId,
     });
 
     res.status(201).json(record);
@@ -51,6 +53,7 @@ const checkOut = async (req, res) => {
     const record = await Attendance.findOne({
       employee: req.user._id,
       date: today,
+      company: req.companyId,
     });
 
     if (!record) {
@@ -75,7 +78,7 @@ const checkOut = async (req, res) => {
 // @access  Private
 const getMyAttendance = async (req, res) => {
   try {
-    const logs = await Attendance.find({ employee: req.user._id }).sort({ date: -1 });
+    const logs = await Attendance.find({ employee: req.user._id, company: req.companyId }).sort({ date: -1 });
     res.json(logs);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -95,13 +98,14 @@ const getMySummary = async (req, res) => {
     // Find all attendance records of the user for this month
     const records = await Attendance.find({
       employee: req.user._id,
-      date: { $regex: `^${monthString}` }
+      date: { $regex: `^${monthString}` },
+      company: req.companyId,
     });
 
     const summary = {
       present: 0,
       late: 0,
-      absent: 0, // In full deployment, we can count total working days - present/late
+      absent: 0,
       totalCheckedIn: records.length,
     };
 
@@ -129,9 +133,10 @@ const getAttendanceReports = async (req, res) => {
   const monthString = `${year}-${String(month).padStart(2, '0')}`;
 
   try {
-    // Find all records matching YYYY-MM
+    // Find all records matching YYYY-MM for the tenant
     const records = await Attendance.find({
-      date: { $regex: `^${monthString}` }
+      date: { $regex: `^${monthString}` },
+      company: req.companyId,
     }).populate('employee', 'name email role position department');
 
     res.json(records);

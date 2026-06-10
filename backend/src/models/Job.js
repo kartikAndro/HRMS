@@ -36,6 +36,11 @@ const jobSchema = new mongoose.Schema({
     type: String,
     enum: ['Open', 'Closed'],
     default: 'Open',
+  },
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company',
+    required: [true, 'Company is required'],
   }
 }, {
   timestamps: true,

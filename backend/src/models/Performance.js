@@ -34,6 +34,11 @@ const performanceSchema = new mongoose.Schema({
     areasForImprovement: { type: [String], default: [] },
     overallSummary: { type: String, default: '' },
     developmentRecommendations: { type: [String], default: [] }
+  },
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company',
+    required: [true, 'Company is required'],
   }
 }, {
   timestamps: true,

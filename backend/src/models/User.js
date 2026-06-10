@@ -54,6 +54,11 @@ const userSchema = new mongoose.Schema({
   salary: {
     type: Number,
     default: 0,
+  },
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company',
+    required: [true, 'Company is required'],
   }
 }, {
   timestamps: true,

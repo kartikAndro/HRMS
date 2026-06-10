@@ -15,13 +15,13 @@ const createReview = async (req, res) => {
       return res.status(400).json({ message: 'Employee, ratings, and feedback are required' });
     }
 
-    const reviewedUser = await User.findById(employee);
+    const reviewedUser = await User.findOne({ _id: employee, company: req.companyId });
     if (!reviewedUser) {
-      return res.status(404).json({ message: 'Target employee not found' });
+      return res.status(404).json({ message: 'Target employee not found or access denied' });
     }
 
     // Calculate task metrics to augment the review
-    const metrics = await calculateTaskMetrics(employee);
+    const metrics = await calculateTaskMetrics(employee, req.companyId);
     const augmentedFeedback = `[Task Completion: ${metrics.completionRate}%, Avg Grade: ${metrics.averageRating}/5, On-Time: ${metrics.onTimeCompletionRate}%]. ${feedback}`;
 
     // Run AI Summary Generator based on ratings and feedback text
@@ -38,17 +38,19 @@ const createReview = async (req, res) => {
       goals: formattedGoals,
       ratings,
       feedback,
-      aiSummary
+      aiSummary,
+      company: req.companyId,
     });
 
     // Notify employee about new performance review
     await sendNotification(
       employee,
       'PerformanceReview',
-      `A new performance review has been published by your manager, ${req.user.name}`
+      `A new performance review has been published by your manager, ${req.user.name}`,
+      req.companyId
     );
 
-    const populatedReview = await Performance.findById(review._id)
+    const populatedReview = await Performance.findOne({ _id: review._id, company: req.companyId })
       .populate('employee', 'name email position')
       .populate('reviewer', 'name email');
 
@@ -71,7 +73,13 @@ const getEmployeeReviews = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to view this employee reviews' });
     }
 
-    const reviews = await Performance.find({ employee: req.params.userId })
+    // Verify target employee belongs to the company
+    const employee = await User.findOne({ _id: req.params.userId, company: req.companyId });
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+
+    const reviews = await Performance.find({ employee: req.params.userId, company: req.companyId })
       .populate('employee', 'name email position')
       .populate('reviewer', 'name email')
       .sort({ createdAt: -1 });
@@ -89,7 +97,7 @@ const updateGoalStatus = async (req, res) => {
   const { status } = req.body; // status: 'Pending' or 'Completed'
 
   try {
-    const review = await Performance.findById(req.params.reviewId);
+    const review = await Performance.findOne({ _id: req.params.reviewId, company: req.companyId });
     if (!review) {
       return res.status(404).json({ message: 'Performance record not found' });
     }
@@ -115,7 +123,8 @@ const updateGoalStatus = async (req, res) => {
       await sendNotification(
         review.reviewer,
         'PerformanceReview',
-        `${req.user.name} has marked their goal ("${review.goals[goalIndex].text}") as Completed`
+        `${req.user.name} has marked their goal ("${review.goals[goalIndex].text}") as Completed`,
+        req.companyId
       );
     }
 

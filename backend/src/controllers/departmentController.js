@@ -4,7 +4,7 @@ const User = require('../models/User');
 // @desc    Get all departments
 const getDepartments = async (req, res) => {
   try {
-    const departments = await Department.find({}).populate('manager', 'name email position profileImage');
+    const departments = await Department.find({ company: req.companyId }).populate('manager', 'name email position profileImage');
     res.json(departments);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -22,7 +22,7 @@ const createDepartment = async (req, res) => {
       return res.status(400).json({ message: 'Department name is required' });
     }
 
-    const deptExists = await Department.findOne({ name: name.trim() });
+    const deptExists = await Department.findOne({ name: name.trim(), company: req.companyId });
     if (deptExists) {
       return res.status(400).json({ message: 'Department already exists' });
     }
@@ -30,6 +30,7 @@ const createDepartment = async (req, res) => {
     const departmentPayload = {
       name: name.trim(),
       description,
+      company: req.companyId,
     };
 
     if (manager && manager !== 'null' && manager !== '') {
@@ -40,10 +41,10 @@ const createDepartment = async (req, res) => {
 
     // If manager is assigned, update user role to 'Manager'
     if (manager && manager !== 'null' && manager !== '') {
-      await User.findByIdAndUpdate(manager, { role: 'Manager' });
+      await User.findOneAndUpdate({ _id: manager, company: req.companyId }, { role: 'Manager' });
     }
 
-    const populatedDept = await Department.findById(department._id).populate('manager', 'name email position profileImage');
+    const populatedDept = await Department.findOne({ _id: department._id, company: req.companyId }).populate('manager', 'name email position profileImage');
     res.status(201).json(populatedDept);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -57,7 +58,7 @@ const updateDepartment = async (req, res) => {
   const { name, description, manager } = req.body;
 
   try {
-    const dept = await Department.findById(req.params.id);
+    const dept = await Department.findOne({ _id: req.params.id, company: req.companyId });
     if (!dept) {
       return res.status(404).json({ message: 'Department not found' });
     }
@@ -68,7 +69,7 @@ const updateDepartment = async (req, res) => {
     if (manager !== undefined) {
       // If there was an old manager, demote them to 'Employee' unless they are Admin or HR
       if (dept.manager && dept.manager.toString() !== manager) {
-        const oldManager = await User.findById(dept.manager);
+        const oldManager = await User.findOne({ _id: dept.manager, company: req.companyId });
         if (oldManager && oldManager.role === 'Manager') {
           oldManager.role = 'Employee';
           await oldManager.save();
@@ -79,7 +80,7 @@ const updateDepartment = async (req, res) => {
 
       // Update new manager's role to 'Manager'
       if (manager && manager !== 'null' && manager !== '') {
-        const newManager = await User.findById(manager);
+        const newManager = await User.findOne({ _id: manager, company: req.companyId });
         if (newManager && newManager.role === 'Employee') {
           newManager.role = 'Manager';
           await newManager.save();
@@ -88,7 +89,7 @@ const updateDepartment = async (req, res) => {
     }
 
     await dept.save();
-    const populatedDept = await Department.findById(dept._id).populate('manager', 'name email position profileImage');
+    const populatedDept = await Department.findOne({ _id: dept._id, company: req.companyId }).populate('manager', 'name email position profileImage');
     res.json(populatedDept);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -100,14 +101,14 @@ const updateDepartment = async (req, res) => {
 // @access  Private (Admin only)
 const deleteDepartment = async (req, res) => {
   try {
-    const dept = await Department.findById(req.params.id);
+    const dept = await Department.findOne({ _id: req.params.id, company: req.companyId });
     if (!dept) {
       return res.status(404).json({ message: 'Department not found' });
     }
 
     // Demote manager if deleting department
     if (dept.manager) {
-      const managerUser = await User.findById(dept.manager);
+      const managerUser = await User.findOne({ _id: dept.manager, company: req.companyId });
       if (managerUser && managerUser.role === 'Manager') {
         managerUser.role = 'Employee';
         await managerUser.save();
@@ -115,9 +116,9 @@ const deleteDepartment = async (req, res) => {
     }
 
     // Unassign department from users
-    await User.updateMany({ department: req.params.id }, { department: null });
+    await User.updateMany({ department: req.params.id, company: req.companyId }, { department: null });
 
-    await Department.findByIdAndDelete(req.params.id);
+    await Department.findOneAndDelete({ _id: req.params.id, company: req.companyId });
     res.json({ message: 'Department deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

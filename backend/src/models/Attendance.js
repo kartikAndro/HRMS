@@ -21,6 +21,11 @@ const attendanceSchema = new mongoose.Schema({
     type: String,
     enum: ['Present', 'Absent', 'Late'],
     default: 'Present',
+  },
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company',
+    required: [true, 'Company is required'],
   }
 }, {
   timestamps: true,

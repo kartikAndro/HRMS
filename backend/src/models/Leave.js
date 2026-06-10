@@ -38,6 +38,11 @@ const leaveSchema = new mongoose.Schema({
     type: String,
     trim: true,
     default: '',
+  },
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company',
+    required: [true, 'Company is required'],
   }
 }, {
   timestamps: true,

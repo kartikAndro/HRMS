@@ -2,10 +2,11 @@ const Job = require('../models/Job');
 
 // @desc    Get all job openings
 // @route   GET /api/jobs
-// @access  Public (So anyone can view available listings)
+// @access  Public
 const getJobs = async (req, res) => {
   try {
-    const jobs = await Job.find({}).populate('department', 'name');
+    const query = req.companyId ? { company: req.companyId } : {};
+    const jobs = await Job.find(query).populate('department', 'name');
     res.json(jobs);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -17,7 +18,8 @@ const getJobs = async (req, res) => {
 // @access  Public
 const getJobById = async (req, res) => {
   try {
-    const job = await Job.findById(req.params.id).populate('department', 'name');
+    const query = req.companyId ? { _id: req.params.id, company: req.companyId } : { _id: req.params.id };
+    const job = await Job.findOne(query).populate('department', 'name');
     if (!job) {
       return res.status(404).json({ message: 'Job opening not found' });
     }
@@ -45,10 +47,11 @@ const createJob = async (req, res) => {
       requirements: Array.isArray(requirements) ? requirements : requirements ? requirements.split(',').map(s => s.trim()) : [],
       salaryRange,
       location: location || 'Remote',
-      type: type || 'Full-time'
+      type: type || 'Full-time',
+      company: req.companyId,
     });
 
-    const populatedJob = await Job.findById(job._id).populate('department', 'name');
+    const populatedJob = await Job.findOne({ _id: job._id, company: req.companyId }).populate('department', 'name');
     res.status(201).json(populatedJob);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -62,7 +65,7 @@ const updateJob = async (req, res) => {
   const { title, description, department, requirements, salaryRange, location, type, status } = req.body;
 
   try {
-    let job = await Job.findById(req.params.id);
+    let job = await Job.findOne({ _id: req.params.id, company: req.companyId });
 
     if (!job) {
       return res.status(404).json({ message: 'Job opening not found' });
@@ -82,7 +85,7 @@ const updateJob = async (req, res) => {
 
     await job.save();
     
-    const populatedJob = await Job.findById(job._id).populate('department', 'name');
+    const populatedJob = await Job.findOne({ _id: job._id, company: req.companyId }).populate('department', 'name');
     res.json(populatedJob);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

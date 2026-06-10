@@ -5,7 +5,7 @@ const User = require('../models/User');
 // @access  Private (Admin, HR)
 const getUsers = async (req, res) => {
   try {
-    const users = await User.find({}).populate('department', 'name');
+    const users = await User.find({ company: req.companyId }).populate('department', 'name');
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -17,7 +17,7 @@ const getUsers = async (req, res) => {
 // @access  Private (Admin, HR, Owner)
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).populate('department', 'name');
+    const user = await User.findOne({ _id: req.params.id, company: req.companyId }).populate('department', 'name');
     
     if (!user) {
       return res.status(404).json({ message: 'Employee not found' });
@@ -64,6 +64,7 @@ const createUser = async (req, res) => {
       role: role || 'Employee',
       position,
       salary: salary ? Number(salary) : 0,
+      company: req.companyId,
     };
 
     if (department && department !== 'null' && department !== '') {
@@ -78,7 +79,7 @@ const createUser = async (req, res) => {
     const user = await User.create(userPayload);
 
     // Return the created user without password
-    const createdUser = await User.findById(user._id).populate('department', 'name');
+    const createdUser = await User.findOne({ _id: user._id, company: req.companyId }).populate('department', 'name');
 
     res.status(201).json(createdUser);
   } catch (error) {
@@ -93,7 +94,7 @@ const updateUser = async (req, res) => {
   const { name, email, password, role, department, position, status, salary } = req.body;
 
   try {
-    let user = await User.findById(req.params.id);
+    let user = await User.findOne({ _id: req.params.id, company: req.companyId });
 
     if (!user) {
       return res.status(404).json({ message: 'Employee not found' });
@@ -163,7 +164,7 @@ const updateUser = async (req, res) => {
 
     await user.save();
 
-    const updatedUser = await User.findById(user._id).populate('department', 'name');
+    const updatedUser = await User.findOne({ _id: user._id, company: req.companyId }).populate('department', 'name');
     res.json(updatedUser);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -175,7 +176,7 @@ const updateUser = async (req, res) => {
 // @access  Private (Admin only)
 const deleteUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findOne({ _id: req.params.id, company: req.companyId });
 
     if (!user) {
       return res.status(404).json({ message: 'Employee not found' });
@@ -186,7 +187,7 @@ const deleteUser = async (req, res) => {
       return res.status(400).json({ message: 'Admin cannot delete their own account' });
     }
 
-    await User.findByIdAndDelete(req.params.id);
+    await User.findOneAndDelete({ _id: req.params.id, company: req.companyId });
     res.json({ message: 'Employee removed successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

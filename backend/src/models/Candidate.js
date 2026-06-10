@@ -45,6 +45,11 @@ const candidateSchema = new mongoose.Schema({
     matchingSkills: { type: [String], default: [] },
     missingSkills: { type: [String], default: [] },
     candidateSummary: { type: String, default: 'Processing match summary...' }
+  },
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company',
+    required: [true, 'Company is required'],
   }
 }, {
   timestamps: true,

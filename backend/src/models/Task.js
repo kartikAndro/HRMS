@@ -46,6 +46,11 @@ const taskSchema = new mongoose.Schema({
   feedback: {
     type: String,
     trim: true,
+  },
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company',
+    required: [true, 'Company is required'],
   }
 }, {
   timestamps: true,
