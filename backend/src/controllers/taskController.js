@@ -74,6 +74,10 @@ const createTask = async (req, res) => {
     today.setHours(0, 0, 0, 0);
     const taskDueDate = new Date(dueDate);
 
+    if (taskDueDate < today) {
+      return res.status(400).json({ message: 'Due date cannot be in the past' });
+    }
+
     const overlappingLeave = await Leave.findOne({
       employee: assignedTo,
       status: 'Approved',

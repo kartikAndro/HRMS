@@ -148,7 +148,11 @@ const RegisterCompany = () => {
                     }`}
                     {...register('adminName', {
                       required: 'Admin name is required',
-                      minLength: { value: 2, message: 'Must be at least 2 characters' }
+                      minLength: { value: 2, message: 'Must be at least 2 characters' },
+                      pattern: {
+                        value: /^[^0-9]+$/,
+                        message: 'Name cannot contain numbers'
+                      }
                     })}
                   />
                 </div>

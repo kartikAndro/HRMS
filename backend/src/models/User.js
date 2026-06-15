@@ -6,6 +6,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Name is required'],
     trim: true,
+    validate: {
+      validator: function(v) {
+        return !/\d/.test(v);
+      },
+      message: 'Name cannot contain numbers'
+    }
   },
   email: {
     type: String,
@@ -54,6 +60,7 @@ const userSchema = new mongoose.Schema({
   salary: {
     type: Number,
     default: 0,
+    min: [0, 'Salary cannot be negative'],
   },
   company: {
     type: mongoose.Schema.Types.ObjectId,

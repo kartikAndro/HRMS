@@ -121,6 +121,18 @@ const Employees = () => {
     setFormLoading(true);
     setFormError('');
 
+    if (/\d/.test(name)) {
+      setFormError('Name cannot contain numbers');
+      setFormLoading(false);
+      return;
+    }
+
+    if (salary !== '' && Number(salary) < 0) {
+      setFormError('Salary cannot be negative');
+      setFormLoading(false);
+      return;
+    }
+
     const formData = new FormData();
     formData.append('name', name);
     formData.append('email', email);
@@ -433,6 +445,8 @@ const Employees = () => {
                   <input
                     type="text"
                     required
+                    pattern="[^0-9]*"
+                    title="Name cannot contain numbers"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     disabled={isPersonalInfoDisabled}
@@ -517,10 +531,12 @@ const Employees = () => {
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Salary ($)</label>
                   <input
                     type="number"
+                    min="0"
+                    placeholder="0"
                     value={salary}
                     onChange={(e) => setSalary(e.target.value)}
                     disabled={isWorkInfoDisabled}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 rounded-xl py-2.5 px-4 text-white text-sm outline-none transition disabled:opacity-50"
+                    className="w-full bg-slate-955 border border-slate-800 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 rounded-xl py-2.5 px-4 text-white text-sm outline-none transition disabled:opacity-50"
                   />
                 </div>
               </div>

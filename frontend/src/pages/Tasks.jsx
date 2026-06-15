@@ -137,6 +137,15 @@ const Tasks = () => {
     e.preventDefault();
     if (!title || !description || !assignedTo || !dueDate) return;
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDueDate = new Date(dueDate);
+
+    if (selectedDueDate < today) {
+      setError('Due date cannot be in the past');
+      return;
+    }
+
     setSubmitLoading(true);
     setError('');
     setSuccess('');
@@ -692,6 +701,7 @@ const Tasks = () => {
                 <input
                   type="date"
                   required
+                  min={new Date().toISOString().split('T')[0]}
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 focus:border-primary-500 rounded-xl py-2 px-3 text-white text-xs outline-none cursor-pointer"
