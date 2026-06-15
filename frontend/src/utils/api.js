@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: 'https://hrms-p8zi.onrender.com/api',
 });
 
 // Request interceptor to attach JWT token if available
