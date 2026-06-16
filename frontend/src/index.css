@@ -38,3 +38,81 @@
   @apply bg-slate-400 dark:bg-slate-700;
 }
 
+/* Light mode overrides for text color visibility in dashboard layout elements */
+html:not(.dark) .dashboard-layout h1.text-white,
+html:not(.dark) .dashboard-layout h2.text-white,
+html:not(.dark) .dashboard-layout h3.text-white,
+html:not(.dark) .dashboard-layout h4.text-white,
+html:not(.dark) .dashboard-layout .text-white:not(button):not(button *):not(a):not(a *):not(.bg-primary-600 *):not(.bg-emerald-600 *):not(.bg-amber-600 *):not(.bg-sky-600 *) {
+  color: #0f172a !important; /* slate-900 */
+}
+
+html:not(.dark) .dashboard-layout .text-slate-100:not(button):not(button *):not(a):not(a *):not(.bg-primary-600 *):not(.bg-emerald-600 *):not(.bg-amber-600 *):not(.bg-sky-600 *) {
+  color: #1e293b !important; /* slate-800 */
+}
+
+html:not(.dark) .dashboard-layout .text-slate-200:not(button):not(button *):not(a):not(a *):not(.bg-primary-600 *):not(.bg-emerald-600 *):not(.bg-amber-600 *):not(.bg-sky-600 *) {
+  color: #334155 !important; /* slate-700 */
+}
+
+html:not(.dark) .dashboard-layout .text-slate-300:not(button):not(button *):not(a):not(a *):not(.bg-primary-600 *):not(.bg-emerald-600 *):not(.bg-amber-600 *):not(.bg-sky-600 *) {
+  color: #475569 !important; /* slate-600 */
+}
+
+html:not(.dark) .dashboard-layout .text-slate-400:not(button):not(button *):not(a):not(a *):not(.bg-primary-600 *):not(.bg-emerald-600 *):not(.bg-amber-600 *):not(.bg-sky-600 *) {
+  color: #64748b !important; /* slate-500 */
+}
+
+html:not(.dark) .dashboard-layout .text-primary-400:not(button):not(button *):not(a):not(a *) {
+  color: #0284c7 !important; /* primary-600 */
+}
+
+html:not(.dark) .dashboard-layout td.text-white {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .dashboard-layout td.text-slate-300 {
+  color: #334155 !important;
+}
+
+/* Background & Border overrides for Light Mode */
+html:not(.dark) .dashboard-layout input:not([type="submit"]):not([type="button"]):not([type="file"]),
+html:not(.dark) .dashboard-layout select,
+html:not(.dark) .dashboard-layout textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important; /* border-slate-300 */
+  color: #0f172a !important; /* slate-900 */
+}
+
+html:not(.dark) .dashboard-layout input::placeholder,
+html:not(.dark) .dashboard-layout textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+html:not(.dark) .dashboard-layout .bg-slate-900 {
+  background-color: #f1f5f9 !important; /* bg-slate-100 */
+  border-color: #cbd5e1 !important;
+}
+
+html:not(.dark) .dashboard-layout .bg-slate-800 {
+  background-color: #ffffff !important; /* bg-white */
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark) .dashboard-layout .bg-slate-900\/50,
+html:not(.dark) .dashboard-layout .bg-slate-900\/40,
+html:not(.dark) .dashboard-layout .bg-slate-900\/30,
+html:not(.dark) .dashboard-layout .bg-slate-950\/40 {
+  background-color: #f1f5f9 !important; /* bg-slate-100 */
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .dashboard-layout .border-slate-800,
+html:not(.dark) .dashboard-layout .border-slate-800\/60,
+html:not(.dark) .dashboard-layout .border-slate-800\/40,
+html:not(.dark) .dashboard-layout .border-slate-800\/80 {
+  border-color: #cbd5e1 !important; /* border-slate-300 */
+}
+
+

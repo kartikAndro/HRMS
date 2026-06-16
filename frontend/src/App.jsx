@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -19,28 +19,42 @@ import InfoPage from './pages/InfoPage';
 import NotificationBell from './components/NotificationBell';
 import { Menu, Sun, Moon } from 'lucide-react';
 
+const AlwaysDark = ({ children }) => {
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+  }, []);
+  return children;
+};
+
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
-  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    return saved ? saved === 'dark' : true;
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isDark) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [isDark]);
 
   const toggleTheme = () => {
-    const root = document.documentElement;
-    if (root.classList.contains('dark')) {
-      root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-      setIsDark(false);
-    } else {
-      root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-      setIsDark(true);
-    }
+    setIsDark(prev => {
+      const next = !prev;
+      localStorage.setItem('theme', next ? 'dark' : 'light');
+      return next;
+    });
   };
 
   if (!user) return <>{children}</>;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex transition-colors duration-300">
+    <div className="dashboard-layout min-h-screen bg-slate-50 dark:bg-slate-950 flex transition-colors duration-300">
       {/* Navigation Sidebar */}
       <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
       
@@ -101,11 +115,11 @@ const Layout = ({ children }) => {
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<AlwaysDark><Landing /></AlwaysDark>} />
+      <Route path="/login" element={<AlwaysDark><Login /></AlwaysDark>} />
       <Route path="/register-company" element={<Navigate to="/#pricing" replace />} />
-      <Route path="/unauthorized" element={<Unauthorized />} />
-      <Route path="/info/:slug" element={<InfoPage />} />
+      <Route path="/unauthorized" element={<AlwaysDark><Unauthorized /></AlwaysDark>} />
+      <Route path="/info/:slug" element={<AlwaysDark><InfoPage /></AlwaysDark>} />
       
       {/* Protected routes */}
       <Route element={<ProtectedRoute allowedRoles={['Admin', 'HR', 'Manager', 'Employee']} />}>
