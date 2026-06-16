@@ -15,6 +15,7 @@ import RegisterCompany from './pages/RegisterCompany';
 import Recruitment from './pages/Recruitment';
 import Performance from './pages/Performance';
 import Tasks from './pages/Tasks';
+import InfoPage from './pages/InfoPage';
 import NotificationBell from './components/NotificationBell';
 import { Menu, Sun, Moon } from 'lucide-react';
 
@@ -104,6 +105,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register-company" element={<Navigate to="/#pricing" replace />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
+      <Route path="/info/:slug" element={<InfoPage />} />
       
       {/* Protected routes */}
       <Route element={<ProtectedRoute allowedRoles={['Admin', 'HR', 'Manager', 'Employee']} />}>

@@ -18,7 +18,12 @@ import {
   ShieldCheck,
   CheckCircle2,
   HelpCircle,
-  MessageSquare
+  MessageSquare,
+  Twitter,
+  Linkedin,
+  Github,
+  Instagram,
+  ArrowUp
 } from 'lucide-react';
 
 const Landing = () => {
@@ -595,8 +600,8 @@ const Landing = () => {
 
             {submitStatus.message && (
               <div className={`p-4 rounded-xl text-xs font-semibold border ${submitStatus.success
-                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                  : 'bg-red-500/10 border-red-500/20 text-red-400'
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                : 'bg-red-500/10 border-red-500/20 text-red-400'
                 }`}>
                 {submitStatus.message}
               </div>
@@ -609,12 +614,17 @@ const Landing = () => {
                   type="text"
                   placeholder="John Doe"
                   className={`w-full bg-slate-950 border rounded-xl py-2.5 px-4 text-slate-200 placeholder-slate-650 text-sm outline-none transition focus:ring-1 ${errors.name
-                      ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/30'
-                      : 'border-slate-800 focus:border-primary-500 focus:ring-primary-500/30'
+                    ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/30'
+                    : 'border-slate-800 focus:border-primary-500 focus:ring-primary-500/30'
                     }`}
                   {...register('name', {
                     required: 'Name is required',
-                    minLength: { value: 2, message: 'Name must be at least 2 characters' }
+                    minLength: { value: 2, message: 'Name must be at least 2 characters' },
+                    maxLength: { value: 50, message: 'Name must not exceed 50 characters' },
+                    pattern: {
+                      value: /^[a-zA-Z\s'-]+$/,
+                      message: 'Name can only contain letters, spaces, hyphens, and apostrophes'
+                    }
                   })}
                 />
                 {errors.name && (
@@ -628,8 +638,8 @@ const Landing = () => {
                   type="email"
                   placeholder="john@company.com"
                   className={`w-full bg-slate-950 border rounded-xl py-2.5 px-4 text-slate-200 placeholder-slate-650 text-sm outline-none transition focus:ring-1 ${errors.email
-                      ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/30'
-                      : 'border-slate-800 focus:border-primary-500 focus:ring-primary-500/30'
+                    ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/30'
+                    : 'border-slate-800 focus:border-primary-500 focus:ring-primary-500/30'
                     }`}
                   {...register('email', {
                     required: 'Email is required',
@@ -650,8 +660,8 @@ const Landing = () => {
                   rows="4"
                   placeholder="How can we help your team?"
                   className={`w-full bg-slate-950 border rounded-xl py-2.5 px-4 text-slate-200 placeholder-slate-650 text-sm outline-none transition resize-none focus:ring-1 ${errors.message
-                      ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/30'
-                      : 'border-slate-800 focus:border-primary-500 focus:ring-primary-500/30'
+                    ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/30'
+                    : 'border-slate-800 focus:border-primary-500 focus:ring-primary-500/30'
                     }`}
                   {...register('message', {
                     required: 'Message is required',
@@ -684,13 +694,125 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 bg-slate-950 border-t border-slate-900 text-center text-xs text-slate-500 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Building size={14} className="text-slate-600" />
-            <span className="font-semibold text-slate-400">PulseHR Platforms © {new Date().getFullYear()}</span>
+      <footer className="bg-slate-950 border-t border-slate-900/80 px-6 py-16 text-slate-400">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10">
+          {/* Logo & Description */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-600/20">
+                <Building size={20} />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white tracking-wide">PulseHR</h3>
+                <span className="text-[10px] text-primary-400 font-semibold tracking-widest uppercase">Operations Control</span>
+              </div>
+            </div>
+            <p className="text-slate-400 text-xs leading-relaxed max-w-sm">
+              Bring your team's departments, attendance, and tasks into one central hub. Work together, stay aligned, and scale faster.
+            </p>
           </div>
-          <p>Designed for intelligent, modern employee operations.</p>
+
+          {/* Product Column */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Product</h4>
+            <ul className="space-y-2 text-xs text-slate-400 font-medium">
+              <li><Link to="/info/overview" className="hover:text-white transition-colors duration-150">Overview</Link></li>
+              <li><Link to="/info/features" className="hover:text-white transition-colors duration-150">Features</Link></li>
+              <li><Link to="/info/messaging" className="hover:text-white transition-colors duration-150">Messaging</Link></li>
+              <li><Link to="/info/file-sharing" className="hover:text-white transition-colors duration-150">File Sharing</Link></li>
+              <li><Link to="/info/security" className="hover:text-white transition-colors duration-150">Security</Link></li>
+            </ul>
+          </div>
+
+          {/* Solutions Column */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Solutions</h4>
+            <ul className="space-y-2 text-xs text-slate-400 font-medium">
+              <li><Link to="/info/hr-operations" className="hover:text-white transition-colors duration-150">HR Operations</Link></li>
+              <li><Link to="/info/payroll" className="hover:text-white transition-colors duration-150">Payroll Management</Link></li>
+              <li><Link to="/info/screening" className="hover:text-white transition-colors duration-150">Candidate Screening</Link></li>
+              <li><Link to="/info/performance" className="hover:text-white transition-colors duration-150">Performance Tracking</Link></li>
+            </ul>
+          </div>
+
+          {/* Resources Column */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Resources</h4>
+            <ul className="space-y-2 text-xs text-slate-400 font-medium">
+              <li><Link to="/info/help-center" className="hover:text-white transition-colors duration-150">Help Center</Link></li>
+              <li><Link to="/info/api" className="hover:text-white transition-colors duration-150">API Reference</Link></li>
+              <li><Link to="/info/tutorials" className="hover:text-white transition-colors duration-150">Tutorials</Link></li>
+              <li><Link to="/info/status" className="hover:text-white transition-colors duration-150">System Status</Link></li>
+            </ul>
+          </div>
+
+          {/* Company Column */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Company</h4>
+            <ul className="space-y-2 text-xs text-slate-400 font-medium">
+              <li><Link to="/info/about" className="hover:text-white transition-colors duration-150">About Us</Link></li>
+              <li><Link to="/info/careers" className="hover:text-white transition-colors duration-150">Careers</Link></li>
+              <li><Link to="/info/partner" className="hover:text-white transition-colors duration-150">Partner Program</Link></li>
+              <li><Link to="/info/privacy" className="hover:text-white transition-colors duration-150">Privacy Policy</Link></li>
+              <li><Link to="/info/terms" className="hover:text-white transition-colors duration-150">Terms of Service</Link></li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Separator & Bottom Row */}
+        <div className="max-w-7xl mx-auto border-t border-slate-900/60 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="text-slate-500 text-xs font-medium">
+            &copy; {new Date().getFullYear()} PulseHR. All rights reserved.
+          </div>
+          <div className="flex items-center gap-4">
+            {/* Social Links */}
+            <div className="flex items-center gap-2">
+              <a
+                href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 bg-slate-900/40 hover:bg-slate-850 text-slate-400 hover:text-white border border-slate-900 hover:border-slate-800 rounded-lg transition duration-150 flex items-center justify-center"
+                aria-label="Twitter"
+              >
+                <Twitter size={14} />
+              </a>
+              <a
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 bg-slate-900/40 hover:bg-slate-850 text-slate-400 hover:text-white border border-slate-900 hover:border-slate-800 rounded-lg transition duration-150 flex items-center justify-center"
+                aria-label="LinkedIn"
+              >
+                <Linkedin size={14} />
+              </a>
+              {/* <a
+                href="https://github.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 bg-slate-900/40 hover:bg-slate-850 text-slate-400 hover:text-white border border-slate-900 hover:border-slate-800 rounded-lg transition duration-150 flex items-center justify-center"
+                aria-label="GitHub"
+              >
+                <Github size={14} />
+              </a> */}
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 bg-slate-900/40 hover:bg-slate-850 text-slate-400 hover:text-white border border-slate-900 hover:border-slate-800 rounded-lg transition duration-150 flex items-center justify-center"
+                aria-label="GitHub"
+              >
+                <Instagram size={14} />
+              </a>
+            </div>
+            {/* Scroll to Top */}
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="p-2 bg-slate-900/40 hover:bg-slate-850 text-slate-400 hover:text-white border border-slate-900 hover:border-slate-800 rounded-lg transition duration-150 flex items-center justify-center cursor-pointer shadow-sm"
+              aria-label="Scroll to top"
+            >
+              <ArrowUp size={14} />
+            </button>
+          </div>
         </div>
       </footer>
     </div>

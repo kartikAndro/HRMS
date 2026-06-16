@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  X, 
-  Upload, 
-  Filter, 
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  X,
+  Upload,
+  Filter,
   AlertCircle,
   ShieldCheck,
   Briefcase
 } from 'lucide-react';
 
 const Employees = () => {
-  const { user: currentUser, isAdmin, isHR } = useAuth();
+  const { user: currentUser, isAdmin, isHR, isManager } = useAuth();
+  
+  const canAddEmployee = 
+    isAdmin || 
+    ((isHR || isManager) && currentUser?.department?.name === 'Human Resources');
   const [employees, setEmployees] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -201,8 +205,8 @@ const Employees = () => {
 
   // Filter logic
   const filteredEmployees = employees.filter(emp => {
-    const matchesSearch = 
-      emp.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch =
+      emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       emp.position?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDept = selectedDept ? emp.department?._id === selectedDept : true;
@@ -228,12 +232,14 @@ const Employees = () => {
               <Briefcase size={16} /> Add Dept
             </button>
           )}
-          <button
-            onClick={openAddModal}
-            className="px-4 py-2.5 bg-primary-600 hover:bg-primary-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-primary-600/10 transition flex items-center gap-2"
-          >
-            <Plus size={16} /> Add Employee
-          </button>
+          {canAddEmployee && (
+            <button
+              onClick={openAddModal}
+              className="px-4 py-2.5 bg-primary-600 hover:bg-primary-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-primary-600/10 transition flex items-center gap-2"
+            >
+              <Plus size={16} /> Add Employee
+            </button>
+          )}
         </div>
       </div>
 
@@ -290,6 +296,7 @@ const Employees = () => {
             <option value="">All Roles</option>
             <option value="Admin">Admin</option>
             <option value="HR">HR</option>
+            <option value="Manager">Manager</option>
             <option value="Employee">Employee</option>
           </select>
         </div>
@@ -320,9 +327,9 @@ const Employees = () => {
                     <tr key={emp._id} className="hover:bg-slate-800/20 transition duration-150">
                       {/* Name & Photo */}
                       <td className="flex items-center gap-3 px-6 py-4">
-                        <img 
-                          src={emp.profileImage} 
-                          alt={emp.name} 
+                        <img
+                          src={emp.profileImage}
+                          alt={emp.name}
                           className="w-10 h-10 rounded-full object-cover border border-slate-700"
                         />
                         <div className="font-semibold text-white">
@@ -337,13 +344,14 @@ const Employees = () => {
                           <span className="px-2 py-1 rounded bg-slate-800 text-slate-300 text-xs font-medium border border-slate-700/40">
                             {emp.department?.name || 'Unassigned'}
                           </span>
-                          <span className={`px-2 py-1 rounded text-xs font-medium border ${
-                            emp.role === 'Admin' 
+                          <span className={`px-2 py-1 rounded text-xs font-medium border ${emp.role === 'Admin'
                               ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                               : emp.role === 'HR'
-                              ? 'bg-primary-500/10 text-primary-400 border-primary-500/20'
-                              : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                          }`}>
+                                ? 'bg-primary-500/10 text-primary-400 border-primary-500/20'
+                                : emp.role === 'Manager'
+                                  ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            }`}>
                             {emp.role}
                           </span>
                         </div>
@@ -416,20 +424,20 @@ const Employees = () => {
             <form onSubmit={handleFormSubmit} className="space-y-6">
               {/* Profile Image Select */}
               <div className="flex flex-col sm:flex-row items-center gap-5 pb-4 border-b border-slate-800/60">
-                <img 
-                  src={imagePreview || 'https://res.cloudinary.com/demo/image/upload/d_avatar.png/avatar.png'} 
-                  alt="Avatar Preview" 
+                <img
+                  src={imagePreview || 'https://res.cloudinary.com/demo/image/upload/d_avatar.png/avatar.png'}
+                  alt="Avatar Preview"
                   className="w-20 h-20 rounded-full object-cover border-2 border-slate-700 bg-slate-800"
                 />
                 {!isPersonalInfoDisabled && (
                   <div>
                     <label className="cursor-pointer px-4 py-2 bg-slate-800 hover:bg-slate-750 text-xs text-slate-200 hover:text-white font-semibold rounded-xl border border-slate-700 flex items-center gap-2">
                       <Upload size={14} /> Upload Profile Photo
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={handleImageChange} 
-                        className="hidden" 
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
                       />
                     </label>
                     <p className="text-[10px] text-slate-500 mt-2">JPEG or PNG. Max file size: 5MB.</p>
@@ -467,7 +475,7 @@ const Employees = () => {
                   />
                 </div>
 
-                 {/* Password (Required for create, optional for edit) */}
+                {/* Password (Required for create, optional for edit) */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                     Password {isEditMode && <span className="text-[10px] text-slate-500 font-normal">(Leave blank to keep current)</span>}
@@ -493,6 +501,7 @@ const Employees = () => {
                   >
                     <option value="Employee">Employee</option>
                     <option value="HR">HR</option>
+                    <option value="Manager">Manager</option>
                     {isAdmin && <option value="Admin">Admin</option>}
                   </select>
                 </div>
@@ -536,7 +545,7 @@ const Employees = () => {
                     value={salary}
                     onChange={(e) => setSalary(e.target.value)}
                     disabled={isWorkInfoDisabled}
-                    className="w-full bg-slate-955 border border-slate-800 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 rounded-xl py-2.5 px-4 text-white text-sm outline-none transition disabled:opacity-50"
+                    className="w-full bg-slate-955 border border-slate-800 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 rounded-xl py-2.5 px-4 text-black text-sm outline-none transition disabled:opacity-50"
                   />
                 </div>
               </div>

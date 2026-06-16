@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Building, Lock, Mail, Shield, Users, User } from 'lucide-react';
+import { Building, Lock, Mail, Shield, Users, User, ArrowLeft } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -54,6 +54,13 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Back to Home Link */}
+      <div className="absolute top-6 left-6 z-20">
+        <Link to="/" className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-white transition group">
+          <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" /> Back to Home
+        </Link>
+      </div>
+
       {/* Background ambient light effects */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-600/10 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none"></div>

@@ -203,6 +203,29 @@ const Recruitment = () => {
     setApplyLoading(true);
     setApplySuccess('');
 
+    // Form validation checks
+    if (/\d/.test(candName)) {
+      alert('Candidate name cannot contain numbers');
+      setApplyLoading(false);
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(candEmail)) {
+      alert('Please enter a valid email address');
+      setApplyLoading(false);
+      return;
+    }
+
+    if (candPhone) {
+      const phoneRegex = /^[0-9]{10}$/;
+      if (!phoneRegex.test(candPhone)) {
+        alert('Phone number must be exactly 10 digits');
+        setApplyLoading(false);
+        return;
+      }
+    }
+
     const formData = new FormData();
     formData.append('job', applyJobId);
     formData.append('name', candName);
@@ -587,6 +610,8 @@ const Recruitment = () => {
                   <input
                     type="text"
                     required
+                    pattern="[^0-9]*"
+                    title="Candidate name cannot contain numbers"
                     value={candName}
                     onChange={(e) => setCandName(e.target.value)}
                     className="w-full bg-slate-955 border border-slate-800 focus:border-primary-500 rounded-xl py-2 px-3 text-white text-sm outline-none transition bg-slate-950"
@@ -608,6 +633,9 @@ const Recruitment = () => {
                   <label className="block text-[10px] font-semibold text-slate-400 uppercase mb-2">Phone Number</label>
                   <input
                     type="text"
+                    pattern="[0-9]{10}"
+                    title="Phone number must be exactly 10 digits"
+                    maxLength="10"
                     value={candPhone}
                     onChange={(e) => setCandPhone(e.target.value)}
                     className="w-full bg-slate-955 border border-slate-800 focus:border-primary-500 rounded-xl py-2 px-3 text-white text-sm outline-none transition bg-slate-950"

@@ -13,7 +13,15 @@ import {
 } from 'lucide-react';
 
 const Leaves = () => {
-  const { user, isAdmin, isHR } = useAuth();
+  const { user, isAdmin, isHR, isManager } = useAuth();
+
+  const getTodayString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
   
   // Shared States
   const [loading, setLoading] = useState(true);
@@ -61,7 +69,7 @@ const Leaves = () => {
     setLoading(true);
     setError('');
     await fetchMyLeaves();
-    if (isAdmin || isHR) {
+    if (isAdmin || isHR || isManager) {
       await fetchAllLeaves();
       setActiveTab('manage'); // Default to manager view
     }
@@ -70,13 +78,25 @@ const Leaves = () => {
 
   useEffect(() => {
     initData();
-  }, [isAdmin, isHR]);
+  }, [isAdmin, isHR, isManager]);
 
   const handleApplySubmit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
     setFormSuccess('');
     setError('');
+
+    const todayStr = getTodayString();
+    if (startDate < todayStr) {
+      setError('Start date cannot be in the past');
+      setFormLoading(false);
+      return;
+    }
+    if (endDate && endDate < startDate) {
+      setError('End date cannot be before start date');
+      setFormLoading(false);
+      return;
+    }
 
     try {
       await api.post('/leaves', {
@@ -135,7 +155,21 @@ const Leaves = () => {
   };
 
   // Group leaves for manager review
-  const pendingLeaves = allLeaves.filter(l => l.status === 'Pending');
+  const pendingLeaves = allLeaves.filter(l => {
+    if (l.status !== 'Pending') return false;
+    if (user && l.employee?._id === user._id) return false;
+
+    if (l.employee?.role === 'HR') {
+      if (isAdmin) return true;
+      if (isManager && user) {
+        const userDeptId = user.department?._id || user.department;
+        const empDeptId = l.employee?.department?._id || l.employee?.department;
+        return userDeptId && empDeptId && userDeptId === empDeptId;
+      }
+      return false;
+    }
+    return true;
+  });
   const processedLeaves = allLeaves.filter(l => l.status !== 'Pending');
 
   return (
@@ -148,7 +182,7 @@ const Leaves = () => {
         </div>
 
         {/* Tab Selection */}
-        {(isAdmin || isHR) && (
+        {(isAdmin || isHR || isManager) && (
           <div className="flex bg-slate-900 border border-slate-800 p-1.5 rounded-xl self-start sm:self-center">
             <button
               onClick={() => setActiveTab('apply')}
@@ -228,7 +262,13 @@ const Leaves = () => {
                       type="date"
                       required
                       value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
+                      min={getTodayString()}
+                      onChange={(e) => {
+                        setStartDate(e.target.value);
+                        if (endDate && e.target.value > endDate) {
+                          setEndDate('');
+                        }
+                      }}
                       className="w-full bg-slate-900 border border-slate-800 focus:border-primary-500 rounded-xl py-2.5 px-3.5 text-white text-sm outline-none"
                     />
                   </div>
@@ -240,6 +280,7 @@ const Leaves = () => {
                       type="date"
                       required
                       value={endDate}
+                      min={startDate || getTodayString()}
                       onChange={(e) => setEndDate(e.target.value)}
                       className="w-full bg-slate-900 border border-slate-800 focus:border-primary-500 rounded-xl py-2.5 px-3.5 text-white text-sm outline-none"
                     />
