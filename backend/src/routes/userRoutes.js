@@ -7,7 +7,7 @@ const { upload, uploadToCloudinary } = require('../middleware/uploadMiddleware')
 
 router.route('/')
   .get(protect, authorize('Admin', 'HR', 'Manager'), getUsers)
-  .post(protect, authorize('Admin', 'HR'), upload.single('profileImage'), uploadToCloudinary, createUser);
+  .post(protect, authorize('Admin', 'HR', 'Manager'), upload.single('profileImage'), uploadToCloudinary, createUser);
 
 router.route('/:id')
   .get(protect, getUserById)

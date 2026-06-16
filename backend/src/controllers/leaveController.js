@@ -17,6 +17,17 @@ const createLeaveRequest = async (req, res) => {
       return res.status(400).json({ message: 'Start date cannot be after end date' });
     }
 
+    const today = new Date();
+    const serverTodayStr = today.toISOString().split('T')[0];
+    const thresholdDate = new Date(serverTodayStr);
+    thresholdDate.setDate(thresholdDate.getDate() - 1);
+
+    const inputDate = new Date(startDate);
+
+    if (inputDate < thresholdDate) {
+      return res.status(400).json({ message: 'Start date cannot be in the past' });
+    }
+
     const leave = await Leave.create({
       employee: req.user._id,
       leaveType,
@@ -62,7 +73,19 @@ const getMyLeaves = async (req, res) => {
 // @access  Private (Admin, HR)
 const getAllLeaves = async (req, res) => {
   try {
-    const leaves = await Leave.find({ company: req.companyId })
+    let query = { company: req.companyId };
+
+    if (req.user.role === 'Manager') {
+      if (!req.user.department) {
+        query.employee = { $in: [] };
+      } else {
+        const employeesInDept = await User.find({ department: req.user.department, company: req.companyId }).select('_id');
+        const employeeIds = employeesInDept.map(emp => emp._id);
+        query.employee = { $in: employeeIds };
+      }
+    }
+
+    const leaves = await Leave.find(query)
       .populate('employee', 'name email position role status department')
       .populate('approvedBy', 'name email')
       .sort({ createdAt: -1 });
@@ -87,6 +110,33 @@ const updateLeaveStatus = async (req, res) => {
 
     if (!leave) {
       return res.status(404).json({ message: 'Leave request not found' });
+    }
+
+    if (leave.employee.toString() === req.user._id.toString()) {
+      return res.status(403).json({ message: 'You cannot approve or reject your own leave request' });
+    }
+
+    const employee = await User.findById(leave.employee);
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+
+    if (employee.role === 'HR') {
+      const isApproverAdmin = req.user.role === 'Admin';
+      const isApproverHRManager = req.user.role === 'Manager' && 
+                                  req.user.department && 
+                                  employee.department && 
+                                  req.user.department.toString() === employee.department.toString();
+      
+      if (!isApproverAdmin && !isApproverHRManager) {
+        return res.status(403).json({ message: 'Only Admin and the Manager of the HR department can approve or reject this leave request' });
+      }
+    }
+
+    if (req.user.role === 'Manager') {
+      if (!employee.department || employee.department.toString() !== req.user.department?.toString()) {
+        return res.status(403).json({ message: 'You are not authorized to approve or reject leave requests outside your department' });
+      }
     }
 
     if (leave.status !== 'Pending') {

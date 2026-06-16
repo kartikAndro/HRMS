@@ -15,6 +15,22 @@ const createCandidate = async (req, res) => {
       return res.status(400).json({ message: 'Job, name, and email are required' });
     }
 
+    if (/\d/.test(name)) {
+      return res.status(400).json({ message: 'Candidate name cannot contain numbers' });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Please provide a valid email address' });
+    }
+
+    if (phone) {
+      const phoneRegex = /^[0-9]{10}$/;
+      if (!phoneRegex.test(phone)) {
+        return res.status(400).json({ message: 'Phone number must be exactly 10 digits' });
+      }
+    }
+
     const targetJob = await Job.findById(job);
     if (!targetJob) {
       return res.status(404).json({ message: 'Target job opening not found' });

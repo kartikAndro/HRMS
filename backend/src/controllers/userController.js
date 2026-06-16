@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Department = require('../models/Department');
 
 // @desc    Get all employees/users
 // @route   GET /api/users
@@ -45,6 +46,22 @@ const createUser = async (req, res) => {
   const { name, email, password, role, department, position, salary } = req.body;
 
   try {
+    // Only HR of HR department, Manager of HR department, and Admin can add employee
+    const hrDept = await Department.findOne({ name: { $regex: /human resources/i }, company: req.companyId });
+    const isApproverAdmin = req.user.role === 'Admin';
+    const isApproverHR = req.user.role === 'HR' && 
+                         req.user.department && 
+                         hrDept && 
+                         req.user.department.toString() === hrDept._id.toString();
+    const isApproverManager = req.user.role === 'Manager' && 
+                              req.user.department && 
+                              hrDept && 
+                              req.user.department.toString() === hrDept._id.toString();
+
+    if (!isApproverAdmin && !isApproverHR && !isApproverManager) {
+      return res.status(403).json({ message: 'Only Admin, HR of the HR department, and the Manager of the HR department can add employees' });
+    }
+
     // Check if email already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
